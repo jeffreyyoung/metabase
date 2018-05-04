@@ -357,38 +357,8 @@
      (do (sync-table! (Table (data/id :venues)))
          (get-field-values))]))
 
-;; Make sure that if a Field's cardinality passes `list-cardinality-threshold` (currently 100) the corresponding
-;; FieldValues entry will be deleted (#3215)
-(defn- insert-range-sql
-  "Generate SQL to insert a row for each number in `rang`."
-  [rang]
-  (str "INSERT INTO blueberries_consumed (num) VALUES "
-       (str/join ", " (for [n rang]
-                        (str "(" n ")")))))
 
-(expect
-  false
-  (let [details {:db (str "mem:" (tu/random-name) ";DB_CLOSE_DELAY=10")}]
-    (binding [mdb/*allow-potentailly-unsafe-connections* true]
-      (tt/with-temp Database [db {:engine :h2, :details details}]
-        (jdbc/with-db-connection [conn (sql/connection-details->spec (driver/engine->driver :h2) details)]
-          (let [exec! #(doseq [statement %]
-                         (jdbc/execute! conn [statement]))]
-            ;; create the `blueberries_consumed` table and insert 50 values
-            (exec! ["CREATE TABLE blueberries_consumed (num INTEGER NOT NULL);"
-                    (insert-range-sql (range 50))])
-            (sync-database! db)
-            (let [table-id (db/select-one-id Table :db_id (u/get-id db))
-                  field-id (db/select-one-id Field :table_id table-id)]
-              ;; field values should exist...
-              (assert (= (count (db/select-one-field :values FieldValues :field_id field-id))
-                         50))
-              ;; ok, now insert enough rows to push the field past the `list-cardinality-threshold` and sync again,
-              ;; there should be no more field values
-              (exec! [(insert-range-sql (range 50 (+ 100 field-values/list-cardinality-threshold)))])
-              (sync-database! db)
-              (db/exists? FieldValues :field_id field-id))))))))
-
+;; TODO - hey, what is this testing? If you wrote this test, please explain what's going on here
 (defn- narrow-to-min-max [row]
   (-> row
       (get-in [:type :type/Number])

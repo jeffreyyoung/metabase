@@ -59,4 +59,4 @@
       (when-let [distinct-count (get-in fingerprint [:global :distinct-count])]
         (cond-> field
           (field-should-be-category? distinct-count field) (assoc :special_type :type/Category)
-          (field-should-be-list?     distinct-count field) (assoc :has_field_values "list"))))))
+          (field-should-be-list?     distinct-count field) (assoc :has_field_values "auto_list"))))))

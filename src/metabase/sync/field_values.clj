@@ -24,7 +24,7 @@
 
 
 (s/defn update-field-values-for-table!
-  "Update the cached FieldValues for all Fields (as needed) for TABLE."
+  "Update the cached FieldValues for all Fields (as needed) for `table`."
   [table :- i/TableInstance]
   (doseq [field (db/select Field :table_id (u/get-id table), :active true, :visibility_type "normal")]
     (sync-util/with-error-handling (format "Error updating field values for %s" (sync-util/name-for-logging field))
@@ -35,7 +35,7 @@
 
 (s/defn update-field-values!
   "Update the cached FieldValues (distinct values for categories and certain other fields that are shown
-   in widgets like filters) for the Tables in DATABASE (as needed)."
+   in widgets like filters) for the Tables in `database` (as needed)."
   [database :- i/DatabaseInstance]
   (sync-util/sync-operation :cache-field-values database (format "Cache field values in %s"
                                                                  (sync-util/name-for-logging database))

@@ -48,7 +48,8 @@
          (contains? field :has_field_values)]}
   (and (not (contains? #{:retired :sensitive :hidden :details-only} (keyword visibility-type)))
        (not (isa? (keyword base-type) :type/DateTime))
-       (= has-field-values "list")))
+       (or (= has-field-values "list")
+           (= has-field-values "auto_list"))))
 
 
 (defn- values-less-than-total-max-length?
@@ -63,32 +64,19 @@
                    "FieldValues are allowed for this Field."
                    "FieldValues are NOT allowed for this Field.")))))
 
-(defn- cardinality-less-than-threshold?
-  "`true` if the number of DISTINCT-VALUES is less that `list-cardinality-threshold`.
-   Does some logging as well."
-  [distinct-values]
-  (let [num-values (count distinct-values)]
-    (u/prog1 (<= num-values list-cardinality-threshold)
-      (log/debug (if <>
-                   (format "Field has %d distinct values (max %d). FieldValues are allowed for this Field."
-                           num-values list-cardinality-threshold)
-                   (format "Field has over %d values. FieldValues are NOT allowed for this Field."
-                           list-cardinality-threshold))))))
-
 
 (defn- distinct-values
-  "Fetch a sequence of distinct values for FIELD that are below the `total-max-length` threshold. If the values are past
-  the threshold, this returns `nil`."
+  "Fetch a sequence of distinct values for `field` that are below the `total-max-length` threshold. If the values are
+  past the threshold, this returns `nil`."
   [field]
   (require 'metabase.db.metadata-queries)
   (let [values ((resolve 'metabase.db.metadata-queries/field-distinct-values) field)]
-    (when (cardinality-less-than-threshold? values)
-      (when (values-less-than-total-max-length? values)
-        values))))
+    (when (values-less-than-total-max-length? values)
+      values)))
 
 (defn- fixup-human-readable-values
   "Field values and human readable values are lists that are zipped together. If the field values have changes, the
-  human readable values will need to change too. This function reconstructs the human_readable_values to reflect
+  human readable values will need to change too. This function reconstructs the `human_readable_values` to reflect
   `NEW-VALUES`. If a new field value is found, a string version of that is used"
   [{old-values :values, old-hrv :human_readable_values} new-values]
   (when (seq old-hrv)
