@@ -15,7 +15,9 @@
              [sample :as sample]
              [text :as text]]
             [metabase.util :as u]
-            [metabase.util.schema :as su]
+            [metabase.util
+             [date :as du]
+             [schema :as su]]
             [schema.core :as s]
             [toucan.db :as db]))
 
@@ -162,6 +164,7 @@
   [database :- i/DatabaseInstance
    tables :- [i/TableInstance]
    log-progress-fn]
-  (doseq [table tables]
-    (fingerprint-fields! table)
-    (log-progress-fn "fingerprint-fields" table)))
+  (du/with-effective-timezone database
+    (doseq [table tables]
+      (fingerprint-fields! table)
+      (log-progress-fn "fingerprint-fields" table))))
