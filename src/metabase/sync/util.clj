@@ -12,6 +12,7 @@
             [metabase.models.table :refer [Table]]
             [metabase.query-processor.interface :as qpi]
             [metabase.sync.interface :as i]
+            [metabase.util.date :as du]
             [toucan.db :as db]))
 
 ;;; +----------------------------------------------------------------------------------------------------------------+
@@ -92,7 +93,7 @@
       (f)
       (log/info (u/format-color 'magenta "FINISHED: %s (%s)"
                   message
-                  (u/format-nanoseconds (- (System/nanoTime) start-time)))))))
+                  (du/format-nanoseconds (- (System/nanoTime) start-time)))))))
 
 
 (defn- with-db-logging-disabled
